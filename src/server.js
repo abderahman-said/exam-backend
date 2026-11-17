@@ -32,13 +32,30 @@ app.use('/api/subscription', subscriptionRoutes);
 app.use('/api/student', studentRoutes);
 app.use('/api/students', studentRoutes);
 
+// Root status
+app.get('/', (req, res) => {
+  res.json({
+    service: 'Kontrol SaaS Engine',
+    status: 'running',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      auth: '/api/auth'
+    }
+  });
+});
+
 // Health check
 app.get('/api/health', async (req, res) => {
   let dbStatus = 'disconnected';
   let dbError = null;
   try {
-    await prisma.$queryRaw`SELECT 1`;
-    dbStatus = 'connected';
+    if (process.env.DATABASE_URL) {
+      await prisma.$queryRaw`SELECT 1`;
+      dbStatus = 'connected';
+    } else {
+      dbStatus = 'no_DATABASE_URL_provided';
+    }
   } catch (err) {
     dbError = err.message;
   }
